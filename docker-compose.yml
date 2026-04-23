@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: shopflow-postgres
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: shopflow
+      POSTGRES_PASSWORD: shopflow_dev
+      POSTGRES_DB: shopflow
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
