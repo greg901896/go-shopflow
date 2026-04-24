@@ -39,3 +39,27 @@ func (r *ProductRepository) GetByID(ctx context.Context, id int64) (*model.Produ
 	}
 	return &p, nil
 }
+
+func (r *ProductRepository) List(ctx context.Context, limit, offset int) ([]model.Product, error) {
+	query := `
+		SELECT id, name, price, stock, created_at
+		FROM products
+		ORDER BY id DESC
+		LIMIT $1 OFFSET $2
+	`
+	rows, err := r.db.Query(ctx, query, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	products := []model.Product{}
+	for rows.Next() {
+		var p model.Product
+		if err := rows.Scan(&p.ID, &p.Name, &p.Price, &p.Stock, &p.CreatedAt); err != nil {
+			return nil, err
+		}
+		products = append(products, p)
+	}
+	return products, rows.Err()
+}

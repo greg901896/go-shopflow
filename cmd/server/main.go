@@ -41,6 +41,7 @@ func main() {
 	})
 
 	r.POST("/products", productHandler.Create)
+	r.GET("/products", productHandler.List)
 	r.GET("/products/:id", productHandler.Get)
 
 	if err := r.Run(":8081"); err != nil {

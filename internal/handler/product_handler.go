@@ -45,6 +45,23 @@ func (h *ProductHandler) Create(c *gin.Context) {
 	c.JSON(http.StatusCreated, p)
 }
 
+func (h *ProductHandler) List(c *gin.Context) {
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
+
+	products, err := h.svc.List(c.Request.Context(), page, limit)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"data":  products,
+		"page":  page,
+		"limit": limit,
+	})
+}
+
 func (h *ProductHandler) Get(c *gin.Context) {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {

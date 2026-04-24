@@ -22,3 +22,14 @@ func (s *ProductService) Create(ctx context.Context, p *model.Product) error {
 func (s *ProductService) GetByID(ctx context.Context, id int64) (*model.Product, error) {
 	return s.repo.GetByID(ctx, id)
 }
+
+func (s *ProductService) List(ctx context.Context, page, limit int) ([]model.Product, error) {
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 || limit > 100 {
+		limit = 20
+	}
+	offset := (page - 1) * limit
+	return s.repo.List(ctx, limit, offset)
+}
