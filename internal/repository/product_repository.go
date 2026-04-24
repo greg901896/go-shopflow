@@ -24,3 +24,18 @@ func (r *ProductRepository) Create(ctx context.Context, p *model.Product) error 
 	return r.db.QueryRow(ctx, query, p.Name, p.Price, p.Stock).
 		Scan(&p.ID, &p.CreatedAt)
 }
+
+func (r *ProductRepository) GetByID(ctx context.Context, id int64) (*model.Product, error) {
+	query := `
+		SELECT id, name, price, stock, created_at
+		FROM products
+		WHERE id = $1
+	`
+	var p model.Product
+	err := r.db.QueryRow(ctx, query, id).
+		Scan(&p.ID, &p.Name, &p.Price, &p.Stock, &p.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return &p, nil
+}

@@ -1,11 +1,14 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/greg901896/go-shopflow/internal/model"
 	"github.com/greg901896/go-shopflow/internal/service"
+	"github.com/jackc/pgx/v5"
 )
 
 type ProductHandler struct {
@@ -40,4 +43,24 @@ func (h *ProductHandler) Create(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, p)
+}
+
+func (h *ProductHandler) Get(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	p, err := h.svc.GetByID(c.Request.Context(), id)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "product not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, p)
 }

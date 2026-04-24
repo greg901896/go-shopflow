@@ -18,3 +18,7 @@ func NewProductService(repo *repository.ProductRepository) *ProductService {
 func (s *ProductService) Create(ctx context.Context, p *model.Product) error {
 	return s.repo.Create(ctx, p)
 }
+
+func (s *ProductService) GetByID(ctx context.Context, id int64) (*model.Product, error) {
+	return s.repo.GetByID(ctx, id)
+}
