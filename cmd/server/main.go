@@ -43,6 +43,7 @@ func main() {
 	r.POST("/products", productHandler.Create)
 	r.GET("/products", productHandler.List)
 	r.GET("/products/:id", productHandler.Get)
+	r.PUT("/products/:id", productHandler.Update)
 
 	if err := r.Run(":8081"); err != nil {
 		log.Fatalf("server failed: %v", err)

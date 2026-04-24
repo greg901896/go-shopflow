@@ -23,6 +23,10 @@ func (s *ProductService) GetByID(ctx context.Context, id int64) (*model.Product,
 	return s.repo.GetByID(ctx, id)
 }
 
+func (s *ProductService) Update(ctx context.Context, id int64, name *string, price *string, stock *int) (*model.Product, error) {
+	return s.repo.Update(ctx, id, name, price, stock)
+}
+
 func (s *ProductService) List(ctx context.Context, page, limit int) ([]model.Product, error) {
 	if page < 1 {
 		page = 1

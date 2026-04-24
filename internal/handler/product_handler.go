@@ -25,6 +25,12 @@ type createProductRequest struct {
 	Stock int    `json:"stock" binding:"gte=0"`
 }
 
+type updateProductRequest struct {
+	Name  *string `json:"name"`
+	Price *string `json:"price"`
+	Stock *int    `json:"stock"`
+}
+
 func (h *ProductHandler) Create(c *gin.Context) {
 	var req createProductRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -60,6 +66,32 @@ func (h *ProductHandler) List(c *gin.Context) {
 		"page":  page,
 		"limit": limit,
 	})
+}
+
+func (h *ProductHandler) Update(c *gin.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		return
+	}
+
+	var req updateProductRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	p, err := h.svc.Update(c.Request.Context(), id, req.Name, req.Price, req.Stock)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "product not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, p)
 }
 
 func (h *ProductHandler) Get(c *gin.Context) {

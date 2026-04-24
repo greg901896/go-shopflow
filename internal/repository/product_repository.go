@@ -40,6 +40,25 @@ func (r *ProductRepository) GetByID(ctx context.Context, id int64) (*model.Produ
 	return &p, nil
 }
 
+func (r *ProductRepository) Update(ctx context.Context, id int64, name *string, price *string, stock *int) (*model.Product, error) {
+	query := `
+		UPDATE products
+		SET
+			name  = COALESCE($2, name),
+			price = COALESCE($3, price),
+			stock = COALESCE($4, stock)
+		WHERE id = $1
+		RETURNING id, name, price, stock, created_at
+	`
+	var p model.Product
+	err := r.db.QueryRow(ctx, query, id, name, price, stock).
+		Scan(&p.ID, &p.Name, &p.Price, &p.Stock, &p.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return &p, nil
+}
+
 func (r *ProductRepository) List(ctx context.Context, limit, offset int) ([]model.Product, error) {
 	query := `
 		SELECT id, name, price, stock, created_at
