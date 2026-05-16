@@ -26,25 +26,37 @@ migrations/              # SQL migrations
 # 1. 啟動 Postgres
 docker compose up -d
 
-# 2. 跑 migration
+# 2. 複製 env 範本
+cp .env.example .env
+
+# 3. 跑 migration
 migrate -path migrations \
   -database "postgres://shopflow:shopflow_dev@localhost:5433/shopflow?sslmode=disable" \
   up
 
-# 3. 啟動 server（port 8081）
+# 4. 啟動 server（port 8081）
 go run cmd/server/main.go
 ```
 
 ## API
 
-### Products
+### Auth
 
 | Method | Path | 說明 |
 |---|---|---|
-| `POST` | `/products` | 新增商品 |
-| `GET` | `/products?page=1&limit=20` | 商品列表（分頁） |
-| `GET` | `/products/:id` | 查單一商品 |
-| `PUT` | `/products/:id` | 更新商品（partial update） |
+| `POST` | `/auth/register` | 註冊，回 user + JWT |
+| `POST` | `/auth/login` | 登入，回 user + JWT |
+
+### Products
+
+| Method | Path | 說明 | Auth |
+|---|---|---|---|
+| `GET` | `/products?page=1&limit=20` | 商品列表（分頁） | — |
+| `GET` | `/products/:id` | 查單一商品 | — |
+| `POST` | `/products` | 新增商品 | ✓ |
+| `PUT` | `/products/:id` | 更新商品（partial update） | ✓ |
+
+> 需登入的路由請帶 header：`Authorization: Bearer <token>`
 
 ## Design Notes
 
@@ -54,12 +66,13 @@ go run cmd/server/main.go
   - 附屬資料（`carts`、`cart_items`）→ `CASCADE`
 - `PUT` 採 partial update 語意：用指標區分「未傳」與「零值」，SQL 以 `COALESCE` 保留原值
 - Postgres 外鍵手動加索引
+- JWT secret 與 DB URL 從 env var 注入，密碼用 bcrypt hash，登入失敗統一回 `invalid credentials` 避免帳號枚舉
 
 ## Development Status
 
 - ✅ Phase 1：專案初始化、Docker Compose、DB migrations
 - ✅ Phase 2：商品模組（CRUD）
-- ⬜ Phase 3：會員認證（JWT + bcrypt）
+- ✅ Phase 3：會員認證（JWT + bcrypt）
 - ⬜ Phase 4：購物車
 - ⬜ Phase 5：訂單 + 串接 go-task-queue
 - ⬜ Phase 6：收尾（logging、tests、env）

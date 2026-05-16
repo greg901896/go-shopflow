@@ -12,10 +12,21 @@ import (
 	"github.com/greg901896/go-shopflow/internal/repository"
 	"github.com/greg901896/go-shopflow/internal/service"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/joho/godotenv"
 )
 
 func main() {
-	dbURL := "postgres://shopflow:shopflow_dev@localhost:5433/shopflow"
+	_ = godotenv.Load()
+
+	dbURL := os.Getenv("DATABASE_URL")
+	if dbURL == "" {
+		log.Fatal("DATABASE_URL not set")
+	}
+
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		log.Fatal("JWT_SECRET not set")
+	}
 
 	pool, err := pgxpool.New(context.Background(), dbURL)
 	if err != nil {
@@ -27,11 +38,6 @@ func main() {
 		log.Fatalf("ping failed: %v", err)
 	}
 	log.Println("connected to postgres")
-
-	jwtSecret := os.Getenv("JWT_SECRET")
-	if jwtSecret == "" {
-		jwtSecret = "dev-secret"
-	}
 
 	productRepo := repository.NewProductRepository(pool)
 	productSvc := service.NewProductService(productRepo)
@@ -54,11 +60,12 @@ func main() {
 	r.POST("/auth/register", authHandler.Register)
 	r.POST("/auth/login", authHandler.Login)
 
+	r.GET("/products", productHandler.List)
+	r.GET("/products/:id", productHandler.Get)
+
 	protected := r.Group("/", middleware.JWTAuth(jwtSecret))
 	{
 		protected.POST("/products", productHandler.Create)
-		protected.GET("/products", productHandler.List)
-		protected.GET("/products/:id", productHandler.Get)
 		protected.PUT("/products/:id", productHandler.Update)
 	}
 
